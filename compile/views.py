@@ -95,9 +95,12 @@ class Compile(TemplateView):
                 end = tim.time()
                 compTime = round((end - start)*1000)
                 
-                if (graph != None and req['pictureOpt']['generate']=='True'):
-                    figDataImg = self.convertToB64(graph, req['pictureOpt']['extension'])
-                    resCodeSucc['graphs'] = figDataImg
+                try:   
+                    if (graph != None and req['pictureOpt']['generate']=='True'):
+                        figDataImg = self.convertToB64(graph, req['pictureOpt']['extension'])
+                        resCodeSucc['graphs'] = figDataImg
+                except KeyError:
+                     pass
             
             resCodeSucc['status'] = statusCode
             resCodeSucc['result'] = f.getvalue()
@@ -110,11 +113,17 @@ class Compile(TemplateView):
             statusCode = status.HTTP_422_UNPROCESSABLE_ENTITY
             resCodeFail['status'] = statusCode
             resCodeFail['type'] = 'UnexpectedCharacters'
+            trace = 'Hidden'
+            try:
+                if (req['maskTrace'] == 'False'):
+                    trace = str(errUC)
+            except KeyError: 
+                pass
             resCodeFail['message'] = {
                     'line': errUC.line,
                     'column': errUC.column,
                     'body': 'Instruction error on the line ' + str(errUC.line) + '. at the position ' + str(errUC.column) + '.',
-                    'trace': str(errUC)
+                    'trace': trace
                 }
             return JsonResponse(resCodeFail, status = statusCode)
                                 
@@ -123,10 +132,16 @@ class Compile(TemplateView):
             statusCode = status.HTTP_422_UNPROCESSABLE_ENTITY
             resCodeFail['status'] = statusCode
             resCodeFail['type'] = 'KeyError'
+            trace = "Hidden"
+            try:
+                if (req['maskTrace'] == 'False'):
+                    trace = str(errKE)
+            except KeyError: 
+                pass
             resCodeFail['message'] = {
                     'variable': errKE.args[0],
                     'body': 'Unknown variable:' + errKE.args[0],
-                    'trace': str(errKE)
+                    'trace': trace
                 }
             return JsonResponse(resCodeFail, status = statusCode)
                                                 
@@ -135,9 +150,15 @@ class Compile(TemplateView):
             statusCode = status.HTTP_422_UNPROCESSABLE_ENTITY
             resCodeFail['status'] = statusCode
             resCodeFail['type'] = 'UnexpectedEOF'
+            trace = "Hidden"
+            try:
+                if (req['maskTrace'] == 'False'):
+                    trace = str(errUE)
+            except KeyError: 
+                pass
             resCodeFail['message'] = {
                     'body': 'Unexpected end of the file. Did you close all brackets?',
-                    'trace': str(errUE)
+                    'trace': trace
                 }
             return JsonResponse(resCodeFail, status = statusCode)
             
@@ -146,9 +167,15 @@ class Compile(TemplateView):
             statusCode = status.HTTP_422_UNPROCESSABLE_ENTITY
             resCodeFail['status'] = statusCode
             resCodeFail['type'] = 'SyntaxError'
+            trace = "Hidden"
+            try:
+                if (req['maskTrace'] == 'False'):
+                    trace = str(errSE)
+            except KeyError: 
+                pass
             resCodeFail['message'] = {
                     'body': 'Unsupported function type for drawing.',
-                    'trace': str(errSE)
+                    'trace': trace
                 }
             return JsonResponse(resCodeFail, status = statusCode) # use reason to set reason phrase
                            
@@ -157,9 +184,15 @@ class Compile(TemplateView):
             statusCode = status.HTTP_500_INTERNAL_SERVER_ERROR
             resCodeFail['status'] = statusCode
             resCodeFail['type'] = 'GeneralErr'
+            trace = "Hidden"
+            try:
+                if (req['maskTrace'] == 'False'):
+                    trace = str(errGX)
+            except KeyError: 
+                pass
             resCodeFail['message'] = {
                     'body': 'An error occured. Please try later.',
-                    'trace': str(errGX)
+                    'trace': trace
                 }
             return JsonResponse(resCodeFail, status = statusCode)
             
